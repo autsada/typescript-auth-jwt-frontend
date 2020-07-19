@@ -2,9 +2,12 @@ import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm, ErrorMessage } from 'react-hook-form'
+import { useMutation } from '@apollo/client'
 
 import Modal from './modal/Modal'
 import { AuthContext } from '../context/AuthContextProvider'
+import { SIGN_UP } from '../apollo/mutations'
+import { User, SignupArgs } from '../types'
 
 interface Props {}
 
@@ -162,10 +165,27 @@ const SignUp: React.FC<Props> = () => {
     password: string
   }>()
 
-  const submitSignup = handleSubmit(({ username, email, password }) => {
-    console.log(username, ': ', email, ': ', password)
+  const [signup, { loading, error }] = useMutation<
+    { signup: User },
+    SignupArgs
+  >(SIGN_UP)
+
+  const submitSignup = handleSubmit(async ({ username, email, password }) => {
+    try {
+      const response = await signup({
+        variables: { username, email, password },
+      })
+
+      if (response?.data?.signup) {
+        console.log(response?.data?.signup)
+      }
+    } catch (error) {
+      console.log(error)
+    }
   })
 
+  console.log('Loading: ', loading)
+  console.log('Error: ', error)
   return (
     <Modal>
       <FormContainer>

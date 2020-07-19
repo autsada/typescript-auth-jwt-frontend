@@ -7,3 +7,5 @@ export interface User {
   roles: Role[]
   created_at: string
 }
+
+export type SignupArgs = Pick<User, 'username' | 'email'> & { password: string }
