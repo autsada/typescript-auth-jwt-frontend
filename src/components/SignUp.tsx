@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useForm, ErrorMessage } from 'react-hook-form'
 
 import Modal from './modal/Modal'
 import { AuthContext } from '../context/AuthContextProvider'
@@ -81,7 +82,7 @@ export const StyledError = styled.p`
   margin: 0;
   padding: 0;
   color: red;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
 `
 
 export const StyledSwitchAction = styled.div`
@@ -155,6 +156,15 @@ export const Divider = styled.hr`
 
 const SignUp: React.FC<Props> = () => {
   const { handleAuthAction } = useContext(AuthContext)
+  const { register, errors, handleSubmit } = useForm<{
+    username: string
+    email: string
+    password: string
+  }>()
+
+  const submitSignup = handleSubmit(({ username, email, password }) => {
+    console.log(username, ': ', email, ': ', password)
+  })
 
   return (
     <Modal>
@@ -176,7 +186,7 @@ const SignUp: React.FC<Props> = () => {
 
         <Divider />
 
-        <StyledForm>
+        <StyledForm onSubmit={submitSignup}>
           <p className='email_section_label'>or sign up with an email</p>
           <InputContainer>
             <label>Username</label>
@@ -186,7 +196,21 @@ const SignUp: React.FC<Props> = () => {
               id='username'
               placeholder='Your username'
               autoComplete='new-password'
+              ref={register({
+                required: 'Username is required.',
+                minLength: {
+                  value: 3,
+                  message: 'Username must be at least 3 characters.',
+                },
+                maxLength: {
+                  value: 60,
+                  message: 'Username must be not more than 60 characters.',
+                },
+              })}
             />
+            <ErrorMessage errors={errors} name='username'>
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
 
           <InputContainer>
@@ -198,7 +222,18 @@ const SignUp: React.FC<Props> = () => {
               id='email'
               placeholder='Your email'
               autoComplete='new-password'
+              ref={register({
+                required: 'Email is required.',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Email is in wrong format.',
+                },
+              })}
             />
+
+            <ErrorMessage errors={errors} name='email'>
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
 
           <InputContainer>
@@ -209,9 +244,24 @@ const SignUp: React.FC<Props> = () => {
               name='password'
               id='password'
               placeholder='Your password'
+              ref={register({
+                required: 'Password is required.',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters.',
+                },
+                maxLength: {
+                  value: 50,
+                  message: 'Password must be not more than 50 characters.',
+                },
+              })}
             />
+
+            <ErrorMessage errors={errors} name='password'>
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
-          <Button disabled>Submit</Button>
+          <Button>Submit</Button>
         </StyledForm>
         <StyledSwitchAction>
           <p>
