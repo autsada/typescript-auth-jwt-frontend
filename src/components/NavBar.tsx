@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { AuthContext } from '../context/AuthContextProvider'
+import { isAdmin } from '../helpers/authHelpers'
 
 interface Props {}
 
@@ -105,7 +106,9 @@ const HamMenu = styled.div`
 `
 
 const NavBar: React.FC<Props> = () => {
-  const { handleAuthAction } = useContext(AuthContext)
+  const { handleAuthAction, loggedInUser, setAuthUser } = useContext(
+    AuthContext
+  )
 
   const router = useRouter()
 
@@ -128,21 +131,35 @@ const NavBar: React.FC<Props> = () => {
             </a>
           </Link>
 
-          <Link href='/dashboard'>
-            <a className={router.pathname === '/dashboard' ? 'active' : ''}>
-              Dashboard
-            </a>
-          </Link>
+          {loggedInUser && (
+            <Link href='/dashboard'>
+              <a className={router.pathname === '/dashboard' ? 'active' : ''}>
+                Dashboard
+              </a>
+            </Link>
+          )}
 
-          <Link href='/admin'>
-            <a className={router.pathname === '/admin' ? 'active' : ''}>
-              Admin
-            </a>
-          </Link>
+          {loggedInUser && isAdmin(loggedInUser) && (
+            <Link href='/admin'>
+              <a className={router.pathname === '/admin' ? 'active' : ''}>
+                Admin
+              </a>
+            </Link>
+          )}
         </Ul>
         <Actions>
-          <button onClick={() => handleAuthAction('signin')}>Sign In</button>
-          <button onClick={() => handleAuthAction('signup')}>Sign Up</button>
+          {loggedInUser ? (
+            <button onClick={() => setAuthUser(null)}>Sign Out</button>
+          ) : (
+            <>
+              <button onClick={() => handleAuthAction('signin')}>
+                Sign In
+              </button>
+              <button onClick={() => handleAuthAction('signup')}>
+                Sign Up
+              </button>
+            </>
+          )}
         </Actions>
         <HamMenu>
           <FontAwesomeIcon icon={['fas', 'bars']} size='2x' />

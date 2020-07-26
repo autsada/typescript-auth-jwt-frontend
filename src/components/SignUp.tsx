@@ -1,8 +1,10 @@
 import React, { useContext } from 'react'
 import styled from 'styled-components'
+import { useRouter } from 'next/router'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm, ErrorMessage } from 'react-hook-form'
 import { useMutation } from '@apollo/client'
+import Loader from 'react-loader-spinner'
 
 import Modal from './modal/Modal'
 import { AuthContext } from '../context/AuthContextProvider'
@@ -158,12 +160,14 @@ export const Divider = styled.hr`
 `
 
 const SignUp: React.FC<Props> = () => {
-  const { handleAuthAction } = useContext(AuthContext)
+  const { handleAuthAction, setAuthUser } = useContext(AuthContext)
   const { register, errors, handleSubmit } = useForm<{
     username: string
     email: string
     password: string
   }>()
+
+  const router = useRouter()
 
   const [signup, { loading, error }] = useMutation<
     { signup: User },
@@ -177,15 +181,25 @@ const SignUp: React.FC<Props> = () => {
       })
 
       if (response?.data?.signup) {
-        console.log(response?.data?.signup)
+        const { signup } = response.data
+
+        if (signup) {
+          // Close form
+          handleAuthAction('close')
+
+          // Set loggedInUser in context api
+          setAuthUser(signup)
+
+          // Push user to their dashboard
+          router.push('/dashboard')
+        }
       }
     } catch (error) {
-      console.log(error)
+      setAuthUser(null)
     }
   })
 
-  console.log('Loading: ', loading)
-  console.log('Error: ', error)
+  console.log(loading)
   return (
     <Modal>
       <FormContainer>
@@ -281,7 +295,29 @@ const SignUp: React.FC<Props> = () => {
               {({ message }) => <StyledError>{message}</StyledError>}
             </ErrorMessage>
           </InputContainer>
-          <Button>Submit</Button>
+
+          <Button
+            disabled={loading}
+            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            {loading ? (
+              <Loader
+                type='Oval'
+                color='white'
+                height={30}
+                width={30}
+                timeout={30000}
+              />
+            ) : (
+              'Submit'
+            )}
+          </Button>
+
+          {error && (
+            <StyledError>
+              {error.graphQLErrors[0]?.message || 'Sorry, something went wrong'}
+            </StyledError>
+          )}
         </StyledForm>
         <StyledSwitchAction>
           <p>
