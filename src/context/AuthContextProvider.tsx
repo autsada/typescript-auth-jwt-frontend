@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react'
 import { useQuery } from '@apollo/client'
+import Router from 'next/router'
 
 import { User } from '../types'
 import { ME } from '../apollo/queries'
@@ -35,6 +36,22 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
   useEffect(() => {
     if (data?.me) setLoggedInUser(data.me)
   }, [data?.me])
+
+  useEffect(() => {
+    const syncSignout = (e: StorageEvent) => {
+      if (e.key === 'signout') {
+        // Log user out
+        setLoggedInUser(null)
+
+        // Push user to home page
+        Router.push('/')
+      }
+    }
+
+    window.addEventListener('storage', syncSignout)
+
+    return () => window.removeEventListener('storage', syncSignout)
+  }, [])
 
   const handleAuthAction: HandleAuthAction = (action) => {
     setAuthAction(action)
