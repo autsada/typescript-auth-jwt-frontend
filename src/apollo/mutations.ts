@@ -31,3 +31,11 @@ export const SIGN_OUT = gql`
     }
   }
 `
+
+export const REQUEST_TO_RESET_PASSWORD = gql`
+  mutation REQUEST_TO_RESET_PASSWORD($email: String!) {
+    requestResetPassword(email: $email) {
+      message
+    }
+  }
+`
