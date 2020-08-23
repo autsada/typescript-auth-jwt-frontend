@@ -10,6 +10,7 @@ import { UPDATE_ROLES } from '../apollo/mutations'
 
 interface Props {
   user: User
+  admin: User | null
 }
 
 const DeleteBtn = styled.button`
@@ -21,7 +22,7 @@ const DeleteBtn = styled.button`
   }
 `
 
-const AdminRow: React.FC<Props> = ({ user }) => {
+const AdminRow: React.FC<Props> = ({ user, admin }) => {
   const { roles } = user
   const initialState = {
     CLIENT: roles.includes('CLIENT'),
@@ -50,6 +51,16 @@ const AdminRow: React.FC<Props> = ({ user }) => {
         v ? newRoles.push(k as Role) : null
       ) // {ITEMEDITOR: true, ADMIN: false} --> [[ITEMEDITOR, true], [ADMIN, false]]
 
+      // Check if the user.roles array has not been changed --> do not call to backend
+      if (user.roles.length === newRoles.length) {
+        const checkRoles = user.roles.map((role) => newRoles.includes(role))
+
+        if (!checkRoles.includes(false)) {
+          alert('Nothing change')
+          return
+        }
+      }
+
       const response = await updateRoles({ variables: { userId, newRoles } })
 
       if (response.data?.updateRoles) {
@@ -60,7 +71,6 @@ const AdminRow: React.FC<Props> = ({ user }) => {
     }
   }
 
-  console.log(roleState)
   return (
     <tr key={user.id}>
       {/* Name */}
@@ -70,144 +80,155 @@ const AdminRow: React.FC<Props> = ({ user }) => {
       <td>{user.email}</td>
 
       {/* CreatedAt */}
-      <td>{user.created_at}</td>
+      <td>{user.createdAt}</td>
 
       {/* Manage Roles Section */}
       {/* client role */}
-      <td
-        style={{
-          background: !isEditing ? 'white' : undefined,
-          cursor: isEditing ? 'pointer' : undefined,
-        }}
-        className='td_role'
-      >
-        <FontAwesomeIcon
-          icon={['fas', 'check-circle']}
-          className='true'
-          size='lg'
-          style={{ color: 'black', cursor: 'not-allowed' }}
-        />
-      </td>
-
-      {/* item editor role */}
-      <td
-        style={{
-          background: !isEditing ? 'white' : undefined,
-          cursor: isEditing ? 'pointer' : undefined,
-        }}
-        className='td_role'
-        onClick={
-          isEditing
-            ? () =>
-                setRoleState((prev) => ({
-                  ...prev,
-                  ITEMEDITOR: !prev.ITEMEDITOR,
-                }))
-            : undefined
-        }
-      >
-        {roleState.ITEMEDITOR ? (
-          <FontAwesomeIcon
-            icon={['fas', 'check-circle']}
-            className='true'
-            size='lg'
-            style={{ color: !isEditing ? 'black' : undefined }}
-          />
-        ) : (
-          <FontAwesomeIcon
-            icon={['fas', 'times-circle']}
-            className='false'
-            size='lg'
-            style={{ color: !isEditing ? 'lightgray' : undefined }}
-          />
-        )}
-      </td>
-
-      {/* admin role */}
-      <td
-        style={{
-          background: !isEditing ? 'white' : undefined,
-          cursor: isEditing ? 'pointer' : undefined,
-        }}
-        className='td_role'
-        onClick={
-          isEditing
-            ? () => setRoleState((prev) => ({ ...prev, ADMIN: !prev.ADMIN }))
-            : undefined
-        }
-      >
+      {isSuperAdmin(admin) && (
         <>
-          {roleState.ADMIN ? (
+          <td
+            style={{
+              background: !isEditing ? 'white' : undefined,
+              cursor: isEditing ? 'pointer' : undefined,
+            }}
+            className='td_role'
+          >
             <FontAwesomeIcon
               icon={['fas', 'check-circle']}
               className='true'
               size='lg'
-              style={{ color: !isEditing ? 'black' : undefined }}
+              style={{ color: 'black', cursor: 'not-allowed' }}
             />
-          ) : (
-            <FontAwesomeIcon
-              icon={['fas', 'times-circle']}
-              className='false'
-              size='lg'
-              style={{ color: !isEditing ? 'lightgray' : undefined }}
-            />
-          )}
-        </>
-      </td>
+          </td>
 
-      {/* super admin role */}
-      <td>
-        {isSuperAdmin(user) && (
-          <FontAwesomeIcon
-            style={{ cursor: 'not-allowed' }}
-            icon={['fas', 'check-circle']}
-            size='lg'
-          />
-        )}
-      </td>
-
-      {/* action */}
-      {isEditing ? (
-        <td>
-          <p className='role_action'>
-            <button>
+          {/* item editor role */}
+          <td
+            style={{
+              background: !isEditing ? 'white' : undefined,
+              cursor: isEditing ? 'pointer' : undefined,
+            }}
+            className='td_role'
+            onClick={
+              isEditing
+                ? () =>
+                    setRoleState((prev) => ({
+                      ...prev,
+                      ITEMEDITOR: !prev.ITEMEDITOR,
+                    }))
+                : undefined
+            }
+          >
+            {roleState.ITEMEDITOR ? (
               <FontAwesomeIcon
-                icon={['fas', 'times']}
-                color='red'
-                onClick={() => {
-                  setRoleState(initialState)
-                  setIsEditing(false)
-                }}
+                icon={['fas', 'check-circle']}
+                className='true'
+                size='lg'
+                style={{ color: !isEditing ? 'black' : undefined }}
+              />
+            ) : (
+              <FontAwesomeIcon
+                icon={['fas', 'times-circle']}
+                className='false'
+                size='lg'
+                style={{ color: !isEditing ? 'lightgray' : undefined }}
+              />
+            )}
+          </td>
+
+          {/* admin role */}
+          <td
+            style={{
+              background: !isEditing ? 'white' : undefined,
+              cursor: isEditing ? 'pointer' : undefined,
+            }}
+            className='td_role'
+            onClick={
+              isEditing
+                ? () =>
+                    setRoleState((prev) => ({ ...prev, ADMIN: !prev.ADMIN }))
+                : undefined
+            }
+          >
+            <>
+              {roleState.ADMIN ? (
+                <FontAwesomeIcon
+                  icon={['fas', 'check-circle']}
+                  className='true'
+                  size='lg'
+                  style={{ color: !isEditing ? 'black' : undefined }}
+                />
+              ) : (
+                <FontAwesomeIcon
+                  icon={['fas', 'times-circle']}
+                  className='false'
+                  size='lg'
+                  style={{ color: !isEditing ? 'lightgray' : undefined }}
+                />
+              )}
+            </>
+          </td>
+
+          {/* super admin role */}
+          <td>
+            {isSuperAdmin(user) && (
+              <FontAwesomeIcon
+                style={{ cursor: 'not-allowed' }}
+                icon={['fas', 'check-circle']}
                 size='lg'
               />
-            </button>
-            <button onClick={() => handleSubmitUpdateRoles(user.id)}>
-              <FontAwesomeIcon icon={['fas', 'check']} color='teal' size='lg' />
-            </button>
-          </p>
-        </td>
-      ) : loading ? (
-        <Loader
-          type='Oval'
-          color='teal'
-          width={30}
-          height={30}
-          timeout={30000}
-        />
-      ) : (
-        <td>
-          <button onClick={() => setIsEditing(true)}>Edit</button>
-        </td>
-      )}
+            )}
+          </td>
 
-      <td>
-        <DeleteBtn
-          style={{ cursor: isEditing ? 'not-allowed' : undefined }}
-          disabled={isEditing}
-        >
-          <FontAwesomeIcon icon={['fas', 'trash-alt']} size='lg' />
-        </DeleteBtn>
-      </td>
+          {/* action */}
+          {loading ? (
+            <td>
+              <Loader
+                type='Oval'
+                color='teal'
+                width={30}
+                height={30}
+                timeout={30000}
+              />
+            </td>
+          ) : isEditing ? (
+            <td>
+              <p className='role_action'>
+                <button>
+                  <FontAwesomeIcon
+                    icon={['fas', 'times']}
+                    color='red'
+                    onClick={() => {
+                      setRoleState(initialState)
+                      setIsEditing(false)
+                    }}
+                    size='lg'
+                  />
+                </button>
+                <button onClick={() => handleSubmitUpdateRoles(user.id)}>
+                  <FontAwesomeIcon
+                    icon={['fas', 'check']}
+                    color='teal'
+                    size='lg'
+                  />
+                </button>
+              </p>
+            </td>
+          ) : (
+            <td>
+              <button onClick={() => setIsEditing(true)}>Edit</button>
+            </td>
+          )}
+
+          <td>
+            <DeleteBtn
+              style={{ cursor: isEditing ? 'not-allowed' : undefined }}
+              disabled={isEditing}
+            >
+              <FontAwesomeIcon icon={['fas', 'trash-alt']} size='lg' />
+            </DeleteBtn>
+          </td>
+        </>
+      )}
     </tr>
   )
 }

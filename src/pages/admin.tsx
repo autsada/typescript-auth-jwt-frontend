@@ -27,6 +27,6 @@ export default function AdminPage() {
   return !isAdmin(loggedInUser) ? (
     <Loader type='Oval' color='teal' height={30} width={30} timeout={30000} />
   ) : (
-    <Admin />
+    <Admin admin={loggedInUser} />
   )
 }
