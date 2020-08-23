@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useMutation } from '@apollo/client'
 import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Loader from 'react-loader-spinner'
 
-import { User } from '../types'
+import { User, Role } from '../types'
 import { isSuperAdmin } from '../helpers/authHelpers'
+import { UPDATE_ROLES } from '../apollo/mutations'
 
 interface Props {
   user: User
@@ -21,12 +24,41 @@ const DeleteBtn = styled.button`
 const AdminRow: React.FC<Props> = ({ user }) => {
   const { roles } = user
   const initialState = {
+    CLIENT: roles.includes('CLIENT'),
     ITEMEDITOR: roles.includes('ITEMEDITOR'),
     ADMIN: roles.includes('ADMIN'),
   }
 
   const [isEditing, setIsEditing] = useState(false)
   const [roleState, setRoleState] = useState(initialState)
+
+  const [updateRoles, { loading, error }] = useMutation<
+    { updateRoles: User },
+    { userId: string; newRoles: Role[] }
+  >(UPDATE_ROLES)
+
+  useEffect(() => {
+    if (error)
+      alert(error.graphQLErrors[0]?.message || 'Sorry, something went wrong')
+  }, [error])
+
+  const handleSubmitUpdateRoles = async (userId: string) => {
+    try {
+      const newRoles: Role[] = []
+
+      Object.entries(roleState).forEach(([k, v]) =>
+        v ? newRoles.push(k as Role) : null
+      ) // {ITEMEDITOR: true, ADMIN: false} --> [[ITEMEDITOR, true], [ADMIN, false]]
+
+      const response = await updateRoles({ variables: { userId, newRoles } })
+
+      if (response.data?.updateRoles) {
+        setIsEditing(false)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   console.log(roleState)
   return (
@@ -149,11 +181,19 @@ const AdminRow: React.FC<Props> = ({ user }) => {
                 size='lg'
               />
             </button>
-            <button>
+            <button onClick={() => handleSubmitUpdateRoles(user.id)}>
               <FontAwesomeIcon icon={['fas', 'check']} color='teal' size='lg' />
             </button>
           </p>
         </td>
+      ) : loading ? (
+        <Loader
+          type='Oval'
+          color='teal'
+          width={30}
+          height={30}
+          timeout={30000}
+        />
       ) : (
         <td>
           <button onClick={() => setIsEditing(true)}>Edit</button>

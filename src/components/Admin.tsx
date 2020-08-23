@@ -1,8 +1,12 @@
 import React from 'react'
+import { useQuery } from '@apollo/client'
 import styled from 'styled-components'
+import Loader from 'react-loader-spinner'
 
 import AdminRow from './AdminRow'
 import { users } from '../helpers/data'
+import { QUERY_USERS } from '../apollo/queries'
+import { User } from '../types'
 
 const Div = styled.div`
   width: 100%;
@@ -58,7 +62,15 @@ const Table = styled.table`
 `
 
 const Admin: React.FC = () => {
-  return (
+  const { data, loading, error } = useQuery<{ users: User[] }>(QUERY_USERS, {
+    fetchPolicy: 'network-only',
+  })
+
+  return loading ? (
+    <Loader type='Oval' color='teal' width={50} height={50} timeout={30000} />
+  ) : error ? (
+    <p>Sorry, something went wrong</p>
+  ) : (
     <Div>
       <h3>Permission Management</h3>
       <Table>
@@ -91,9 +103,8 @@ const Admin: React.FC = () => {
         </thead>
 
         <tbody>
-          {users.map((user) => (
-            <AdminRow user={user} key={user.id} />
-          ))}
+          {data &&
+            data.users.map((user) => <AdminRow user={user} key={user.id} />)}
         </tbody>
       </Table>
     </Div>

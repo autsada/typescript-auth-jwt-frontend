@@ -11,3 +11,15 @@ export const ME = gql`
     }
   }
 `
+
+export const QUERY_USERS = gql`
+  query {
+    users {
+      id
+      username
+      email
+      roles
+      createdAt
+    }
+  }
+`
