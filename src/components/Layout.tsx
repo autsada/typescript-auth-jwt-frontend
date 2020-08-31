@@ -72,7 +72,17 @@ const DisplayedPage = styled.div`
 const Layout: React.FC<Props> = ({ children }) => {
   const { authAction, handleAuthAction } = useContext(AuthContext)
 
-  const { pathname, query } = useRouter()
+  const { asPath, replace, pathname, query } = useRouter()
+
+  useEffect(() => {
+    if (asPath === '/dashboard#_=_' || asPath === '/dashboard#') {
+      replace('/dashboard')
+    }
+
+    if (asPath === '/#_=_' || asPath === '/#') {
+      replace('/')
+    }
+  }, [asPath, replace])
 
   useEffect(() => {
     if (query?.resetToken) handleAuthAction('reset')

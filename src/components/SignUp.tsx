@@ -199,7 +199,6 @@ const SignUp: React.FC<Props> = () => {
     }
   })
 
-  console.log(loading)
   return (
     <Modal>
       <FormContainer>
@@ -210,11 +209,15 @@ const SignUp: React.FC<Props> = () => {
         <StyledSocial>
           <button className='facebook'>
             <FontAwesomeIcon icon={['fab', 'facebook-f']} size='lg' />
-            <a>Sign in with Facebook</a>
+            <a href={`${process.env.NEXT_PUBLIC_FACEBOOK_LOGIN_URI}`}>
+              Log in with Facebook
+            </a>
           </button>
           <button className='google'>
             <FontAwesomeIcon icon={['fab', 'google']} />
-            <a>Sign in with Google</a>
+            <a href={`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URI}`}>
+              Log in with Google
+            </a>
           </button>
         </StyledSocial>
 
@@ -337,3 +340,4 @@ const SignUp: React.FC<Props> = () => {
 }
 
 export default SignUp
+// iaejdoujgk_1588746206@tfbnw.net
