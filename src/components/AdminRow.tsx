@@ -6,7 +6,8 @@ import Loader from 'react-loader-spinner'
 
 import { User, Role } from '../types'
 import { isSuperAdmin } from '../helpers/authHelpers'
-import { UPDATE_ROLES } from '../apollo/mutations'
+import { UPDATE_ROLES, DELETE_USER } from '../apollo/mutations'
+import { QUERY_USERS } from '../apollo/queries'
 
 interface Props {
   user: User
@@ -68,6 +69,31 @@ const AdminRow: React.FC<Props> = ({ user, admin }) => {
       }
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  const [deleteUser, deleteUserRes] = useMutation<
+    { deleteUser: { message: string } },
+    { userId: string }
+  >(DELETE_USER)
+
+  useEffect(() => {
+    if (deleteUserRes.error)
+      alert(deleteUserRes.error.graphQLErrors[0]?.message)
+  }, [deleteUserRes.error])
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const res = await deleteUser({
+        variables: { userId },
+        refetchQueries: [{ query: QUERY_USERS }],
+      })
+
+      if (res.data?.deleteUser.message) {
+        alert(res.data?.deleteUser.message)
+      }
+    } catch (error) {
+      alert((error as Error).message)
     }
   }
 
@@ -220,12 +246,29 @@ const AdminRow: React.FC<Props> = ({ user, admin }) => {
           )}
 
           <td>
-            <DeleteBtn
-              style={{ cursor: isEditing ? 'not-allowed' : undefined }}
-              disabled={isEditing}
-            >
-              <FontAwesomeIcon icon={['fas', 'trash-alt']} size='lg' />
-            </DeleteBtn>
+            {isSuperAdmin(user) ? null : (
+              <DeleteBtn
+                style={{ cursor: isEditing ? 'not-allowed' : undefined }}
+                disabled={isEditing}
+                onClick={() => {
+                  if (!confirm('Are you sure to delete this user?')) return
+
+                  handleDeleteUser(user.id)
+                }}
+              >
+                {deleteUserRes.loading ? (
+                  <Loader
+                    type='Oval'
+                    color='teal'
+                    width={30}
+                    height={30}
+                    timeout={30000}
+                  />
+                ) : (
+                  <FontAwesomeIcon icon={['fas', 'trash-alt']} size='lg' />
+                )}
+              </DeleteBtn>
+            )}
           </td>
         </>
       )}
