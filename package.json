@@ -5,6 +5,9 @@
     "engines": {
         "node": "12.x"
     },
+    "cacheDirectories": [
+        ".next/cache"
+    ],
     "scripts": {
         "dev": "next dev",
         "build": "next build",
